@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 import plotly.graph_objects as go
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CERULEAN])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SUPERHERO])
 
 connection_url = "postgresql+psycopg2://root:root@172.18.0.2:5432/povertydb"
 
