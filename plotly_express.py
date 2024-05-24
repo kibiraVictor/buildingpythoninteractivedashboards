@@ -76,16 +76,16 @@ app.layout = html.Div([
         ], label='Project Info')
 ]), 
     html.Br(),
-    dcc.Dropdown(id='country_dropdwon', options=[{
-        'label': country,
-        'value': country
-    } for country in df_sql['Country Name']]),
-    html.Div(id='report'),
+    # dcc.Dropdown(id='country_dropdwon', options=[{
+    #     'label': country,
+    #     'value': country
+    # } for country in df_sql['Country Name']]),
+    # html.Div(id='report'),
     html.Br(),
     #dcc.Graph(id='year_vs_indicator'),
     html.H2('Gini index - World Bank Data',
             style={
-                'color': 'blue',
+                'color': 'black',
                 'fontSize': '40px',
                 'textAlign': 'center',
                 'fontFamily': 'arial'
@@ -111,14 +111,14 @@ app.layout = html.Div([
    
 ], style={'backgroundColor': '#E5ECF6'})
 
-@app.callback(Output('report', 'children'),
-              Input('country_dropdown', 'value'))
-def display_selected_country(country, df_sql=df_sql):
-    if country is None:
-        country = ' You have not selected'
-        return country + 'anything'
-    df_sql = df_sql[df_sql['Country Name'] == country]
-    df_sql=df['Country Name'].unique()
+# @app.callback(Output('report', 'children'),
+#               Input('country_dropdown', 'value'))
+# def display_selected_country(country, df_sql=df_sql):
+#     if country is None:
+#         country = ' You have not selected'
+#         return country + 'anything'
+#     df_sql = df_sql[df_sql['Country Name'] == country]
+#     df_sql=df['Country Name'].unique()
     
 # Create year as our callback
 @app.callback(Output('gini_year_barchart', 'figure'),
