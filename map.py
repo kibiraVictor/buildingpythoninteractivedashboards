@@ -1,47 +1,60 @@
-from dash import html, dcc, Input, Output
-from dash.exceptions import PreventUpdate
+from dash import html, dcc
+from dash.dependencies import Input, Output
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import pandas as pd
 import dash
+from sqlalchemy import create_engine, text
+from sqlalchemy.pool import NullPool
+from dash.exceptions import PreventUpdate
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CERULEAN])
 
-# Load and preprocess the data
-df = pd.read_csv('povertydata.csv')
-df = df[['Country Name', 'Country Code', 'is_country', 'Income Group', 'GINI index (World Bank estimate)']]
-df = df.drop_duplicates(subset=['Country Code', 'Country Name'])
+postgres_url = "postgresql://root:root@172.18.0.2:5432/povertydb"
+
+engine = create_engine(postgres_url, poolclass=NullPool)
+
+with engine.connect() as connection:
+    t = text('''
+        SELECT DISTINCT "Country Code" FROM poverty_data;
+    ''')
+    df = pd.read_sql(t, con=connection)
 
 app.layout = html.Div([
-    html.H1('Poverty and Equity Database Chloropleth Map'),
+    html.H1('Choropleth and scattermapbox',
+            style={
+                'color': 'blue',
+                'textAlign': 'center',
+                'fontSize': '25px'
+            }),
     html.Br(),
     dcc.Dropdown(
-        id='country_code',
-        options=[{'label': country, 'value': code} for code, country in zip(df['Country Code'], df['Country Name'])],
+        id='country-code',
+        options=[{'label': code, 'value': code} for code in df['Country Code']],
         placeholder='Select a country'
     ),
-    dcc.Graph(id='chloropleth')
+    dcc.Graph(id='mapplot')
 ])
 
-@app.callback(
-    Output('chloropleth', 'figure'),
-    Input('country_code', 'value')
-)
-def plot_chloropleth_map(selected_country_code):
-    if not selected_country_code:
-        return dash.no_update
-
-    filtered_df = df[df['Country Code'] == selected_country_code]
-
-    if filtered_df.empty:
+@app.callback(Output('mapplot', 'figure'), [Input('country-code', 'value')])
+def plot_map_scatter_plot(code):
+    if not code:
         raise PreventUpdate
 
+    with engine.connect() as connection:
+        t = text('''
+            SELECT "Country Code", "Country Name", "Indicator Name"
+            FROM poverty_data;
+        ''')
+        
+        country_df =pd.read_sql(t, con=engine)
+
     fig = px.choropleth(
-        filtered_df,
+        country_df,
         locations='Country Code',
-        color='GINI index (World Bank estimate)',
-        hover_name='Country Code',
-        title=f'Choropleth Map for {filtered_df["Country Name"].values[0]}'
+        hover_name='Country Name',
+        color='Country Name',
+        color_continuous_scale=px.colors.sequential.Plasma
     )
     return fig
 
